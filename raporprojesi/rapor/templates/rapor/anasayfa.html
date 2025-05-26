@@ -1,0 +1,164 @@
+{% extends 'rapor/base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Ana Sayfa" %}{% endblock %}
+
+{% block content %}
+<style>
+    .kutucuk {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        z-index: 1000;
+    }
+
+    #aciklama {
+        top: 80px;
+        left: 20px;
+        width: 400px;
+    }
+
+    #rapor-form {
+        top: 300px;
+        left: 20px;
+        width: 300px;
+    }
+
+    #karsilama {
+        top: 80px;
+        right: 20px;
+        width: 300px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #son-raporlar {
+        top: 180px;
+        right: 20px;
+        width: 300px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+</style>
+
+<div class="position-relative" style="height: 100vh;">
+    <div id="harita" style="height: 100%; width: 100%; border-radius: 0;"></div>
+
+    <div id="aciklama" class="kutucuk">
+        <h4>{% trans "RAPOR OLUŞTURMA SAYFASI" %}</h4>
+        <p class="mb-0">
+            {% blocktrans %}Bu sayfa, belirli bir olayın tarih, açıklama ve konum bilgileriyle birlikte harita üzerinden raporlanmasını sağlar.
+            Lütfen olayın gerçekleştiği yeri harita üzerinden seçin ve gerekli bilgileri eksiksiz doldurarak kaydınızı oluşturun.{% endblocktrans %}
+        </p>
+    </div>
+
+    <div id="rapor-form" class="kutucuk">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="enlem" id="enlem">
+            <input type="hidden" name="boylam" id="boylam">
+
+            <div class="mb-2">
+                <input type="text" name="isim" class="form-control form-control-sm" placeholder="{% trans 'İsim Soyisim' %}" required>
+            </div>
+            <div class="mb-2">
+                <select name="olay" id="olay-select" class="form-select form-select-sm" required>
+                    <option value="" disabled selected>{% trans "Olay Türü" %}</option>
+                    <option value="Elektrik Kesintisi">{% trans "Elektrik Kesintisi" %}</option>
+                    <option value="Birikmiş Çöp">{% trans "Birikmiş Çöp" %}</option>
+                    <option value="Yaralı Hayvan">{% trans "Yaralı Hayvan" %}</option>
+                    <option value="Kaza">{% trans "Kaza" %}</option>
+                    <option value="Bozuk Yol">{% trans "Bozuk Yol" %}</option>
+                    <option value="Yıkılmış Duvar">{% trans "Yıkılmış Duvar" %}</option>
+                    <option value="Gürültü Kirliliği">{% trans "Gürültü Kirliliği" %}</option>
+                    <option value="Diğer">{% trans "Diğer" %}</option>
+                </select>
+            </div>
+            <div class="mb-2" id="diger-aciklama" style="display: none;">
+                <input type="text" name="diger_aciklama" class="form-control form-control-sm" placeholder="{% trans 'Açıklama' %}">
+            </div>
+            <div class="mb-2">
+                <input type="date" name="tarih" class="form-control form-control-sm" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-sm w-100">{% trans "Raporla" %}</button>
+        </form>
+    </div>
+
+    <div id="karsilama" class="kutucuk">
+        {% if uye %}
+            <span>{% blocktrans %}Hoş Geldin {{ uye.isim }}{% endblocktrans %}</span>
+            <a href="{% url 'cikis' %}" class="btn btn-sm btn-outline-danger ms-2">{% trans "Çıkış Yap" %}</a>
+        {% else %}
+            <a href="{% url 'uye_ol' %}" class="btn btn-sm btn-outline-primary">{% trans "Üye Ol" %}</a>
+            <a href="{% url 'giris' %}" class="btn btn-sm btn-outline-secondary ms-2">{% trans "Giriş Yap" %}</a>
+        {% endif %}
+    </div>
+
+    <div id="son-raporlar" class="kutucuk">
+        <h6>{% trans "Son Raporlar" %}</h6>
+        <div class="list-group">
+            {% for r in raporlar|slice:":3" %}
+                <div class="list-group-item">
+                    <strong>{{ r.tarih }}</strong><br>
+                    {{ r.isim }} - {{ r.olay }}
+                    {% if r.olay == "Diğer" and r.diger_aciklama %}
+                        <div><em>{% trans "Açıklama:" %}</em> {{ r.diger_aciklama }}</div>
+                    {% endif %}
+                    <span class="adres-yukleniyor text-muted" data-enlem="{{ r.enlem }}" data-boylam="{{ r.boylam }}">
+                        📍 {% trans "Adres yükleniyor..." %}
+                    </span>
+                </div>
+            {% empty %}
+                <p class="text-muted">{% trans "Hiç rapor bulunamadı." %}</p>
+            {% endfor %}
+        </div>
+        <a href="{% url 'raporlar' %}" class="btn btn-sm btn-outline-dark mt-2 w-100">{% trans "Tüm Raporları Gör" %}</a>
+        {% if uye %}
+            <a href="{% url 'raporlarim' %}" class="btn btn-sm btn-outline-info mt-1 w-100">{% trans "Raporlarım" %}</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const istanbulBounds = {
+        north: 41.3,
+        south: 40.8,
+        east: 29.3,
+        west: 28.4
+    };
+
+    const map = L.map('harita').setView([41.0082, 28.9784], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    let marker = null;
+
+    map.on('click', function(e) {
+        const lat = e.latlng.lat;
+        const lon = e.latlng.lng;
+
+        if (lat > istanbulBounds.north || lat < istanbulBounds.south || lon > istanbulBounds.east || lon < istanbulBounds.west) {
+            alert("⚠️ {% trans 'İstanbul sınırları içinde seçim yapınız.' %}");
+            return;
+        }
+
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lon]).addTo(map);
+        document.getElementById('enlem').value = lat;
+        document.getElementById('boylam').value = lon;
+    });
+
+    document.getElementById('olay-select').addEventListener('change', function() {
+        const diger = document.getElementById('diger-aciklama');
+        diger.style.display = this.value === 'Diğer' ? 'block' : 'none';
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === '1') alert("✅ {% trans 'Rapor başarıyla gönderildi.' %}");
+    if (params.get('error') === '1') alert("⚠️ {% trans 'Lütfen tüm alanları doldurunuz.' %}");
+</script>
+{% endblock %}

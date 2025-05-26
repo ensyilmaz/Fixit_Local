@@ -1,0 +1,10 @@
+<!-- profil.html -->
+<h2>Profil Sayfası</h2>
+
+{% if uye %}
+    <p>Hoşgeldiniz, {{ uye.isim }} {{ uye.soyisim }}!</p>
+    <p>TC Kimlik: {{ uye.tc_kimlik }}</p>
+    <a href="{% url 'anasayfa' %}">Ana Sayfaya Dön</a>
+{% else %}
+    <p>Giriş yapmadınız. Lütfen önce giriş yapın.</p>
+{% endif %}
