@@ -13,13 +13,15 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rapor',
+    "jazzmin",  # mutlaka en üstte olmalı
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+
+    "rapor",  # ← uygulaman bu klasörde
 ]
 
 MIDDLEWARE = [
@@ -52,6 +54,14 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'raporprojesi.wsgi.application'
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Fixit Local Admin",
+    "site_header": "Fixit Local Yönetim Paneli",
+    "site_brand": "Fixit Local",
+    "welcome_sign": "Hoş geldiniz!",
+    "copyright": "Fixit",
+}
 
 # Database
 
@@ -91,9 +101,7 @@ LANGUAGES = [
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 LOCALE_PATHS = [
