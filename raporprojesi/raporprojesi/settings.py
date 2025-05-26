@@ -1,7 +1,6 @@
-### 📁 settings.py (TAM GÜNCELLENMİŞ HÂLİ)
-
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _
+import os  # 🔸 STATIC ayarı için eklendi
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,7 +8,7 @@ SECRET_KEY = 'your-secret-key'
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -26,7 +25,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware',  # 🌐 Dil desteği eklendi
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -102,9 +101,8 @@ LOCALE_PATHS = [
 ]
 
 # Static files (CSS, JavaScript, Images)
-
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'  # 🔸 URL path
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # 🔸 Render için gerekli klasör
 
 # Default primary key field type
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
